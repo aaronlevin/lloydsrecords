@@ -2,17 +2,63 @@
 <html>
 <head>
     <title>Lloyd's Records</title>
+        <style>
+        /* Reset defaults */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Main content container */
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Centered text styles */
+        .centered-content {
+            text-align: center;
+            /* Comfortable reading width on mobile */
+            margin: 0 auto;
+            /* Responsive font size */
+            font-size: clamp(16px, 4vw, 20px);
+            /* Responsive line height for readability */
+            line-height: 1.5;
+        }
+
+        /* Additional styles for better mobile reading */
+        .title {
+            font-size: clamp(24px, 6vw, 36px);
+            margin-bottom: 20px;
+        }
+
+        .paragraph {
+            margin-bottom: 15px;
+        }
+
+        /* Media query for larger screens */
+        @media (min-width: 768px) {
+            .container {
+                padding: 40px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <center>
-        <h1>Lloyd's Records</h1>
+        <div class="container">
+        <div class="centered-content">
+        <h1 class="title">Lloyd's Records</h1>
         <img src="images/Lloyds_postcard_6x4.png" width="600em"></img>
-        <p>😎 welcome to our website 😎</p>
-        <address>
+        <p class="paragraph">😎 welcome to our website 😎</p>
+        <address class="paragraph">
             3824 Telegraph Avenue<br />
             Oakland, California 94609<br />
             USA
         </address>
+            <center>
         <table>
           <tr>
             <td><img src="images/under-construction.webp" width="40em"></td>
@@ -21,5 +67,6 @@
           </tr>
         </table>
     </center>
+        </div></div>
 </body>
 </html>
