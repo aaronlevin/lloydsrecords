@@ -4,11 +4,12 @@
 <h1 class="title">
   {{ section.title }}
 </h1>
+<p>A lot of incredible music is discovered by listening to mixes. We thought it would be interesting to hear about mixes that were particularly important to people. If you or someone you know would has a cool mix to share, let us know: <a href="mailto:aaron@lloydsrecords.com">aaron [at] lloydsrecords [dot] com</a>.</p>
 <ul>
   <!-- If you are using pagination, section.pages will be empty.
        You need to use the paginator object -->  
   {% for page in section.pages %}
-  <ul><a href="{{ page.permalink | safe }}">{{ page.title }}</a><p></p> {{ page.extra.mix | safe }}</ul>
+  <ul><h3>💿 <a href="{{ page.permalink | safe }}">{{ page.title }}</a></h3>{{ page.extra.mix | safe }}</ul>
   {% endfor %}
 </ul>
 {% endblock content %}
