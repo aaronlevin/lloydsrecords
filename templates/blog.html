@@ -8,8 +8,7 @@
   <!-- If you are using pagination, section.pages will be empty.
        You need to use the paginator object -->  
   {% for page in section.pages %}
-  <ul><a href="{{ page.permalink | safe }}">{{ page.title }}</a></ul>
-  {{ page.extra.mix | safe }}
+  <ul><a href="{{ page.permalink | safe }}">{{ page.title }}</a><p></p> {{ page.extra.mix | safe }}</ul>
   {% endfor %}
 </ul>
 {% endblock content %}
