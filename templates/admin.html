@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block css %}
+{{ super() }}
+<script src="https://apis.google.com/js/api.js"></script>
+<script type="text/javascript" src="admin.js"></script>
+{% endblock css %}
+
+{% block content %}
+<p>wecome to the admin mpage</p>
+<div id="initiate-oauth"></div>
+{% endblock content %}
