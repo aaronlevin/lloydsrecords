@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>HTML & CSS Avery Labels (5160) by MM at Boulder Information Services</title>
+    <link rel="stylesheet" href="labels.css">
+    <script type="text/javascript" src="util.js"></script>
+    <script>
+      const utils = importUtils();
+      const mkLabel = (artist, album, label, genre1, genre2, genre3, description) => {
+        return {
+          "genres": [genre1, genre2, genre3],
+          "artist": artist,
+          "album": album,
+          "label": label,
+          "description": description
+        }
+      };
+      const render = (label) => {
+        const node = document.createElement("div");
+        node.classList.add("label");
+
+        const genreNode = document.createElement("div");
+        genreNode.classList.add("top-left");
+        const genreNodeText = document.createElement("p");
+        genreNodeText.innerHTML =
+          `${label.genres[0]}<br />${label.genres[1]}<br />${label.genres[2]}`;
+        genreNode.appendChild(genreNodeText);
+
+        const releaseNode = document.createElement("div");
+        releaseNode.classList.add("top-right");
+        const releaseNodeText = document.createElement("p");
+        releaseNodeText.innerHTML =
+          `${label.artist}<br /><em>${label.album}</em><br />(${label.label})`; releaseNode.appendChild(releaseNodeText);
+
+        const descriptionNode = document.createElement("div");
+        descriptionNode.classList.add("bottom");
+        descriptionNode.innerHTML = `<p>${label.description}</p>`;
+
+        const svgNode = document.createElement("div");
+        svgNode.classList.add("svg");
+        svgNode.innerHTML = '<img src="g8.svg" />';
+
+        node.appendChild(genreNode);
+        node.appendChild(releaseNode);
+        node.appendChild(descriptionNode);
+        node.appendChild(svgNode);
+
+        return node;
+      };
+
+      const render3 = (labelsDiv, labels3) => {
+        // add left gutter
+        const leftGutter = document.createElement("div");
+        leftGutter.classList.add("left-gutter");
+        labelsDiv.appendChild(leftGutter);
+
+        // add labels
+        labelsDiv.appendChild(render(labels3[0]));
+
+        // add gutter
+        const firstGutter = document.createElement("div");
+        firstGutter.classList.add("first-gutter");
+        labelsDiv.appendChild(firstGutter);
+
+        // add labels
+        labelsDiv.appendChild(render(labels3[1]));
+
+        // add gutter
+        const secondGutter = document.createElement("div");
+        secondGutter.classList.add("second-gutter");
+        labelsDiv.appendChild(secondGutter);
+
+        // add labels
+        labelsDiv.appendChild(render(labels3[2]));
+
+        // right gutter
+        const rightGutter = document.createElement("div");
+        rightGutter.classList.add("right-gutter");
+        labelsDiv.appendChild(rightGutter);
+      };
+
+      const chunks = (items) => {
+        const result = [];
+        for(let i = 0; i < items.length ; i += 3) {
+          result.push(items.slice(i, 3 + i));
+        }
+        return result;
+      };
+
+      const spreadsheetId = "1ue6b2SIU-kh-WEHSNBwyWFjhHMFNGiB248ajE4blP9s";
+
+      const renderLabels = (labelsDiv, labels) => {
+        const topGutterDiv = document.createElement("div");
+        topGutterDiv.classList.add("top-gutter");
+        labelsDiv.appendChild(topGutterDiv);
+        chunks(labels).forEach((chunk) => {
+          render3(labelsDiv, chunk);
+        });
+        const bottomGutterDiv = document.createElement("div");
+        bottomGutterDiv.classList.add("bottom-gutter");
+        labelsDiv.appendChild(bottomGutterDiv);
+      };
+
+      window.addEventListener("load", (event) => {
+        const labelsDiv = document.getElementById("labels");
+
+        const accessToken = utils.getAccessToken();
+        if(accessToken === null || accessToken === undefined) {
+          utils.createOAuthButton(utils.clientId, "initiate-oauth", "labels");
+        } else {
+          utils.handleSpreadsheet(spreadsheetId, "labels", utils.clientId, accessToken)
+            .then((json) => {
+              const data = json.valueRanges[0].values.slice(1).slice(0, 30).map((row) => {
+                return mkLabel(...row);
+              });
+
+              renderLabels(labelsDiv, data);
+            });
+        }
+
+
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="initiate-oauth"> </div>
+    <div id="labels"></div>
+  </body>
+</html>

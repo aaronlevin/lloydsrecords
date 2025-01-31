@@ -2,10 +2,17 @@
 {% block css %}
 {{ super() }}
 <script src="https://apis.google.com/js/api.js"></script>
+<script type="text/javascript" src="util.js"></script>
 <script type="text/javascript" src="admin.js"></script>
 {% endblock css %}
 
 {% block content %}
 <p>wecome to the admin mpage</p>
 <div id="initiate-oauth"></div>
+<label for="consignor">Consignor Id:</label>
+<input type="text" id="consignor-id-input" name="consignor-id" required minlength="3" maxlength="3" size="5" />
+<button type="button" id="consignor-sales-button">Generate Report</button>
+
+<div id="errors"></div>
+<div id="results"></div>
 {% endblock content %}
