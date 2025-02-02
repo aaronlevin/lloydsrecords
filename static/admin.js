@@ -211,7 +211,7 @@ class Summary {
     ul.appendChild(totalPayoutsLi);
 
     const totalPaymentLi = document.createElement("li");
-    totalPaymentLi.innerHTML = `<strong>total payment</strong> (total sales - payouts to date): ${Summary.format(this.cardSalesNet)}`;
+    totalPaymentLi.innerHTML = `<strong>total payment</strong> (total sales - payouts to date): ${Summary.format(this.cardSalesNet - this.payoutsNet)}`;
     ul.appendChild(totalPaymentLi);
 
     div.appendChild(ul);
