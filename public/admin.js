@@ -189,6 +189,10 @@ class Summary {
     }).format(amount);
   }
 
+  calculatePayout() {
+    return (this.totalSales - this.payoutsNet);
+  }
+
   render(div) {
     // clear div
     div.innerHTML = '';
@@ -211,7 +215,7 @@ class Summary {
     ul.appendChild(totalPayoutsLi);
 
     const totalPaymentLi = document.createElement("li");
-    totalPaymentLi.innerHTML = `<strong>total payment</strong> (total sales - payouts to date): ${Summary.format(this.cardSalesNet - this.payoutsNet)}`;
+    totalPaymentLi.innerHTML = `<strong>total payment</strong> (total sales - payouts to date): ${Summary.format(this.calculatePayout())}`;
     ul.appendChild(totalPaymentLi);
 
     div.appendChild(ul);
