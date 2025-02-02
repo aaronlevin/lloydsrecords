@@ -140,6 +140,7 @@ class Render {
     // render sales
     if(sales.has(consignorId)) {
       const table = document.createElement("table");
+      table.classList.add("results-table");
       rowHeaderFn(table);
       sales.get(consignorId).forEach((sale) => {
         sale.renderRow(table)
