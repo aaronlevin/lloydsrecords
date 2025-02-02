@@ -20,6 +20,6 @@ highlight_code = false
 
 header_nav = [
     { name = "~home", url = "/" },
-    { name = "#blog", url = "/blog" },
+    { name = "#bllog", url = "/bllog" },
     { name = "$shop", url = "/shop" },
 ]
