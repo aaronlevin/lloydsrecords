@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block css %}
 {{ super() }}
+<link rel="stylesheet" href="/admin.css">
 <script src="https://apis.google.com/js/api.js"></script>
 <script type="text/javascript" src="/util.js"></script>
 <script type="text/javascript" src="/admin.js"></script>
@@ -14,5 +15,46 @@
 <button type="button" id="consignor-sales-button">Generate Report</button>
 
 <div id="errors"></div>
-<div id="results"></div>
+
+<div class="tabs">
+  <div class="tab">
+    <input type="radio" id="tab-1" name="tab-group-1" checked>
+    <label for="tab-1">Overview</label>
+    <div class="content">
+      <h2>Overview</h2>
+      <div id="summary-results"></div>
+    </div>
+  </div>
+
+  <div class="tab">
+    <input type="radio" id="tab-2" name="tab-group-1">
+    <label for="tab-2">Card Sales</label>
+    <div class="content">
+      <h2>Card Sales</h2>
+      <div id="card-sales-results"></div>
+    </div>
+  </div>
+
+  <div class="tab">
+    <input type="radio" id="tab-3" name="tab-group-1">
+    <label for="tab-3">Cash Sales</label>
+    <div class="content">
+      <h2>Cash Sales</h2>
+      <div id="cash-sales-results"></div>
+    </div>
+  </div>
+
+  <div class="tab">
+    <input type="radio" id="tab-4" name="tab-group-1">
+    <label for="tab-4">Payouts</label>
+    <div class="content">
+      <h2>Payouts</h2>
+      <div id="payouts-results">(in-progress)</div>
+    </div>
+  </div>
+</div>
+
+
+
+
 {% endblock content %}

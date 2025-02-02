@@ -77,7 +77,13 @@ function importUtils() {
       });
       initiateOAuthDiv.appendChild(button);
     },
-    "clientId": "854834269816-846dbhdislm8v1f7t4479kkligliu33g.apps.googleusercontent.com"
+    "clientId": "854834269816-846dbhdislm8v1f7t4479kkligliu33g.apps.googleusercontent.com",
+
+    "htmlToNodes": function(html) {
+      const template = document.createElement('template');
+      template.innerHTML = html;
+      return template.content.childNodes.item(0);
+    }
   };
 
 }
