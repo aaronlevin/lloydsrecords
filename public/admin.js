@@ -1,5 +1,19 @@
 const utils = importUtils();
 
+class ConsignorRate {
+  static amount(sale) {
+    if(sale < 19) {
+      return sale * 0.5;
+    } else if(20 <= sale < 159) {
+      return sale * 0.7;
+    } else if(150 <= sale < 399) {
+      return sale * 0.8;
+    } else {
+      return sale * 0.9;
+    }
+  }
+}
+
 class Payout {
   constructor(date, consignor, amount, note) {
     this.date = date;
@@ -40,6 +54,7 @@ class CashSale {
     this.consignor = consignor;
     this.item = item;
     this.note = note;
+    this.owed = ConsignorRate.amount(this.price);
   }
 
   static renderRowHeader(table) {
@@ -50,6 +65,8 @@ class CashSale {
     consignorCell.innerHTML = "consignor";
     const netCell = headerRow.insertCell();
     netCell.innerHTML = "net";
+    const owedCell = headerRow.insertCell();
+    owedCell.innerHTML = "owed";
     const noteCell = headerRow.insertCell();
     noteCell.innerHTML = "note";
   }
@@ -61,7 +78,9 @@ class CashSale {
     const consignorCell = row.insertCell();
     consignorCell.innerHTML = this.consignor;
     const netCell = row.insertCell();
-    netCell.innerHTML = this.price;
+    netCell.innerHTML = Render.float(this.price);
+    const payoutCell = row.insertCell();
+    payoutCell.innerHTML = Render.float(this.owed);
     const noteCell = row.insertCell();
     if(this.note === undefined || this.note === null) {
       noteCell.innerHTML = `${this.item}`;
@@ -81,6 +100,7 @@ class CardSale {
     this.gross = parseFloat(gross.slice(1));
     this.discount = parseFloat(discount.slice(2));
     this.net = parseFloat(net.slice(1));
+    this.owed = ConsignorRate.amount(this.net);
 
     const consignor = note.substring(0,3);
     if(this.ConsignorIdRegex.test(consignor)) {
@@ -104,6 +124,8 @@ class CardSale {
     discountCell.innerHTML = "discount";
     const netCell = headerRow.insertCell();
     netCell.innerHTML = "net";
+    const owedCell = headerRow.insertCell();
+    owedCell.innerHTML = "owed";
     const noteCell = headerRow.insertCell();
     noteCell.innerHTML = "note";
   }
@@ -117,15 +139,30 @@ class CardSale {
     const quantityCell = row.insertCell();
     quantityCell.innerHTML = this.quantity;
     const discountCell = row.insertCell();
-    discountCell.innerHTML = this.discount;
+    discountCell.innerHTML = Render.float(this.discount);
     const netCell = row.insertCell();
-    netCell.innerHTML = this.net;
+    netCell.innerHTML = Render.float(this.net);
+    const payoutCell = row.insertCell();
+    payoutCell.innerHTML = Render.float(this.owed);
     const noteCell = row.insertCell();
     noteCell.innerHTML = this.note;
   }
 }
 
+class Consignor {
+  constructor(id, name, email) {
+    this.id = id;
+    this.name = name;
+    this.email = email;
+  }
+}
+
 class Render {
+
+  static float(number) {
+    const rounded = Math.round(number * 100) / 100; // Round to 2 decimal places
+    return Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(2);
+  }
 
   /**
    *  presumes the type of sales has a `renderRow(table)` function
@@ -157,20 +194,23 @@ class Render {
 class Summary {
   constructor(consignorId, cardSalesMap, cashSalesMap, payoutsMap) {
     var totalSales = 0;
+    this.totalPayout = 0;
+    this.cardSalesNet = 0;
+    this.cashSalesNet = 0;
     if(cardSalesMap.has(consignorId)) {
       const net = cardSalesMap.get(consignorId).reduce((sum, sale) => sum + sale.net, 0);
-      this.cardSalesNet = net;
+      const owed = cardSalesMap.get(consignorId).reduce((sum, sale) => sum + sale.owed, 0);
+      this.cardSalesNet += net;
+      this.totalPayout += owed;
       totalSales += net;
-    } else {
-      this.cardSalesNet = 0;
     }
 
     if(cashSalesMap.has(consignorId)) {
       const net = cashSalesMap.get(consignorId).reduce((sum, sale) => sum + sale.price, 0);
-      this.cashSalesNet = net;
+      const owed = cashSalesMap.get(consignorId).reduce((sum, sale) => sum + sale.owed, 0);
+      this.cashSalesNet += net;
+      this.totalPayout += owed;
       totalSales += net;
-    } else {
-      this.cashSalesNet = 0;
     }
 
     if(payoutsMap.has(consignorId)) {
@@ -190,7 +230,7 @@ class Summary {
   }
 
   calculatePayout() {
-    return (this.totalSales - this.payoutsNet);
+    return (this.totalPayout - this.payoutsNet);
   }
 
   render(div) {
@@ -210,6 +250,10 @@ class Summary {
     totalSalesLi.innerHTML = `<strong>total sales</strong>: ${Summary.format(this.totalSales)}`;
     ul.appendChild(totalSalesLi);
 
+    const totalOwedLi = document.createElement("li");
+    totalOwedLi.innerHTML = `amount owed: ${Summary.format(this.totalPayout)}`;
+    ul.appendChild(totalOwedLi);
+
     const totalPayoutsLi = document.createElement("li");
     totalPayoutsLi.innerHTML = `payouts to date: ${Summary.format(this.payoutsNet)}`;
     ul.appendChild(totalPayoutsLi);
@@ -225,19 +269,30 @@ class Summary {
 
 document.addEventListener('DOMContentLoaded', function() {
 
-  var consignorId = "";
+  var consignorId = "000";
   /** setup buttons **/
-  const consignorIdInput = document.getElementById("consignor-id-input");
-  consignorIdInput.addEventListener("input", (e) => {
-    consignorId = e.target.value;
-  });
-
 
   const spreadsheetId = "14O0EDOq9luZvaxUd69uyFBWFe0tQt5xxQEas2E_i0pc";
   const accessToken = utils.getAccessToken();
   if(accessToken === null || accessToken === undefined) {
     utils.createOAuthButton(utils.clientId, "initiate-oauth", "admin");
   } else {
+
+    // add consignors selections
+    const selectElem = document.getElementById("consignor-select");
+    selectElem.addEventListener("change", (event) => {
+      consignorId = event.target.value;
+    });
+    utils.handleSpreadsheet(spreadsheetId, "consignors", utils.clientId, accessToken)
+      .then((json) => {
+        json.valueRanges[0].values.slice(1).forEach((v) => {
+          const consignor = new Consignor(...v);
+          const option = document.createElement("option");
+          option.value = consignor.id;
+          option.innerHTML = `${consignor.id}: ${consignor.name}`;
+          selectElem.appendChild(option);
+        });
+      });
 
     const consignorsPromise =
       utils.handleSpreadsheet(spreadsheetId, "consignors", utils.clientId, accessToken)
