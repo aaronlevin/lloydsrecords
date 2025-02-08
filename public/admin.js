@@ -251,7 +251,7 @@ class Summary {
     ul.appendChild(totalSalesLi);
 
     const totalOwedLi = document.createElement("li");
-    totalOwedLi.innerHTML = `amount owed: ${Summary.format(this.totalPayout)}`;
+    totalOwedLi.innerHTML = `consignor's cut: ${Summary.format(this.totalPayout)}`;
     ul.appendChild(totalOwedLi);
 
     const totalPayoutsLi = document.createElement("li");
@@ -259,7 +259,7 @@ class Summary {
     ul.appendChild(totalPayoutsLi);
 
     const totalPaymentLi = document.createElement("li");
-    totalPaymentLi.innerHTML = `<strong>total payment</strong> (total sales - payouts to date): ${Summary.format(this.calculatePayout())}`;
+    totalPaymentLi.innerHTML = `<strong>amount owed</strong> (total sales - payouts to date): ${Summary.format(this.calculatePayout())}`;
     ul.appendChild(totalPaymentLi);
 
     div.appendChild(ul);
