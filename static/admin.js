@@ -4,9 +4,9 @@ class ConsignorRate {
   static amount(sale) {
     if(sale < 19) {
       return sale * 0.5;
-    } else if(20 <= sale < 159) {
+    } else if(20 <= sale  && sale < 159) {
       return sale * 0.7;
-    } else if(150 <= sale < 399) {
+    } else if(150 <= sale && sale < 399) {
       return sale * 0.8;
     } else {
       return sale * 0.9;
@@ -322,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const sales = json.valueRanges[0].values.slice(1).map((e) => {
             return new CardSale(e[0], e[1], e[5], e[9], e[10], e[11], e[16]);
           });
-          return sales.reduce((map, obj) => {
+          const salesMap = sales.reduce((map, obj) => {
             if(map.has(obj.consignor)) {
               map.get(obj.consignor).push(obj);
             } else {
@@ -330,6 +330,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             return map
           }, new Map());
+          salesMap.values().forEach((sales) => sales.sort((a,b) => a.date + a.time - b.date - b.time));
+          return salesMap;
         });
 
     const cashSalesPromise =
@@ -338,7 +340,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const sales = json.valueRanges[0].values.slice(1).map((e) => {
             return new CashSale(...e);
           });
-          return sales.reduce((map, obj) => {
+          const salesMap = sales.reduce((map, obj) => {
             if(map.has(obj.consignor)) {
               map.get(obj.consignor).push(obj);
             } else {
@@ -346,6 +348,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             return map
           }, new Map());
+          // sort the payments
+          salesMap.values().forEach((sales) => sales.sort((a,b) => a.date - b.date));
+          return salesMap;
         });
 
     Promise.all([consignorsPromise, consignorPayoutsPromise, salesPromise, cashSalesPromise])
