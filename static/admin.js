@@ -220,6 +220,19 @@ class Summary {
       this.payoutsNet = 0;
     }
     this.totalSales = totalSales;
+
+    var totalSales = 0;
+    var consignorSales = 0;
+    var payouts = 0;
+    totalSales += cardSalesMap.values().reduce((sum, sales) => sum + sales.reduce((arr,x) => arr + (x.net || 0),0),0);
+    consignorSales += cardSalesMap.values().reduce((sum, sales) => sum + sales.reduce((arr,x) => arr + (x.owed || 0),0),0);
+    totalSales += cashSalesMap.values().reduce((sum, sales) => sum + sales.reduce((arr,x) => arr + x.price,0),0);
+    consignorSales += cashSalesMap.values().reduce((sum, sales) => sum + sales.reduce((arr,x) => arr + x.owed,0),0);
+    payouts = payoutsMap.values().reduce((sum, outs) => sum + outs.reduce((arr,x) => arr + x.amount,0),0);
+
+    console.log(`TOTALS\n\ttotal sales = ${totalSales}\n\tConsignors Owed = ${consignorSales}\n\tpayouts = ${payouts}\n\tShop Takehome = ${totalSales-consignorSales}`);
+
+    
   }
 
   static format(amount) {
