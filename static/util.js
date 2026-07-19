@@ -18,37 +18,26 @@ function importUtils() {
       return 25569 + (date.getTime()-date.getTimezoneOffset()*60000)/86400000 ;
     },
 
-    "readStreamToString": async function(stream) {
-      const reader = stream.getReader();
-      let result = "";
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        result += decoder.decode(value, { stream: true });
-      }
-
-      return result;
-    },
-
     // ranges=Transactions, Sheet1
     "handleSpreadsheet": function(spreadsheetId, ranges, clientId, accessToken) {
       const requestUri =
         `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?` +
         'ranges=' + ranges +
-        '&valueRenderOption=UNFORMATTED_VALUE' +
-        '&access_token=' + accessToken;
+        '&valueRenderOption=UNFORMATTED_VALUE';
 
       const request = new Request(requestUri, {
-        "method": "GET"
+        "method": "GET",
+        "headers": { "Authorization": `Bearer ${accessToken}` }
       });
 
       const promise =
         window.fetch(request)
-        .then((response) => response.body)
-        .then((body) => this.readStreamToString(body))
-        .then((body) => JSON.parse(body));
+        .then((response) => {
+          if(!response.ok) {
+            throw new Error(`Sheets API request failed (HTTP ${response.status})`);
+          }
+          return response.json();
+        });
 
       return(promise);
     },
