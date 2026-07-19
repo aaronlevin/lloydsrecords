@@ -10,9 +10,8 @@ build_search_index = true
 theme = "no-style-please"
 
 [markdown]
-# Whether to do syntax highlighting
-# Theme can be customised by setting the `highlight_theme` variable to a theme supported by Zola
-highlight_code = false
+# Syntax highlighting is disabled by default; set [markdown.highlighting]
+# options here if it's ever wanted (zola >= 0.22 syntax)
 
 
 [extra]
