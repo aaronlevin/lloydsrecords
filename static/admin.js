@@ -350,6 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
     utils.handleSpreadsheet(spreadsheetId, "consignors", utils.clientId, accessToken)
       .then((json) => {
         const consignors = json.valueRanges[0].values.slice(1).map((v) => new Consignor(...v));
+        consignors.sort((a, b) => a.id.localeCompare(b.id));
         consignors.forEach((consignor) => {
           const option = document.createElement("option");
           option.value = consignor.id;
