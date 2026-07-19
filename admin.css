@@ -1,0 +1,72 @@
+/* results tables: fill the column, scroll sideways if too narrow */
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.results-table td {
+  padding: 0.25rem 0.5rem 0.25rem 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+/* header row */
+.results-table tr:first-child td {
+  font-weight: bold;
+  border-bottom: 1px solid #ccc;
+}
+
+/* dates (first column) and notes (last column) stay on one line;
+   wide notes make the table scroll sideways in its panel */
+.results-table td:first-child,
+.results-table td:last-child {
+  white-space: nowrap;
+}
+
+/* on small screens the table scrolls inside its panel instead of squishing */
+#card-sales-results,
+#cash-sales-results,
+#payouts-results {
+  overflow-x: auto;
+}
+
+/* tabs: labels in a row, the active panel below at its natural height */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 2rem 0;
+}
+
+.tab {
+  display: contents;
+}
+
+.tab label {
+  background: #eee;
+  padding: 10px;
+  border: 1px solid #ccc;
+  margin-left: -1px;
+  cursor: pointer;
+}
+
+.tab [type=radio] {
+  display: none;
+}
+
+.content {
+  /* panels come after all the labels and span the full width */
+  order: 99;
+  width: 100%;
+  padding: 20px 0;
+  background: white;
+  display: none;
+}
+
+[type=radio]:checked ~ label {
+  background: white;
+  border-bottom: 1px solid white;
+}
+
+[type=radio]:checked ~ label ~ .content {
+  display: block;
+}
