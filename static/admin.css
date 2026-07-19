@@ -16,8 +16,10 @@
   border-bottom: 1px solid #ccc;
 }
 
-/* dates (always the first column) stay on one line */
-.results-table td:first-child {
+/* dates (first column) and notes (last column) stay on one line;
+   wide notes make the table scroll sideways in its panel */
+.results-table td:first-child,
+.results-table td:last-child {
   white-space: nowrap;
 }
 
