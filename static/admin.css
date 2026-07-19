@@ -1,16 +1,42 @@
+/* results tables: fill the column, scroll sideways if too narrow */
 .results-table {
-  width: 150%;
+  width: 100%;
+  border-collapse: collapse;
 }
 
+.results-table td {
+  padding: 0.25rem 0.5rem 0.25rem 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+/* header row */
+.results-table tr:first-child td {
+  font-weight: bold;
+  border-bottom: 1px solid #ccc;
+}
+
+/* dates (always the first column) stay on one line */
+.results-table td:first-child {
+  white-space: nowrap;
+}
+
+/* on small screens the table scrolls inside its panel instead of squishing */
+#card-sales-results,
+#cash-sales-results,
+#payouts-results {
+  overflow-x: auto;
+}
+
+/* tabs: labels in a row, the active panel below at its natural height */
 .tabs {
-  position: relative;
-  min-height: 200px;
-  max-width: 600px;
-  margin: 2rem auto;
+  display: flex;
+  flex-wrap: wrap;
+  margin: 2rem 0;
 }
 
 .tab {
-  float: left;
+  display: contents;
 }
 
 .tab label {
@@ -18,8 +44,6 @@
   padding: 10px;
   border: 1px solid #ccc;
   margin-left: -1px;
-  position: relative;
-  left: 1px;
   cursor: pointer;
 }
 
@@ -28,24 +52,19 @@
 }
 
 .content {
-  position: absolute;
-  top: 28px;
-  left: 0;
+  /* panels come after all the labels and span the full width */
+  order: 99;
+  width: 100%;
+  padding: 20px 0;
   background: white;
-  right: 0;
-  bottom: 0;
-  padding: 20px;
-  /* border: 1px solid #ccc; */
   display: none;
 }
 
 [type=radio]:checked ~ label {
   background: white;
   border-bottom: 1px solid white;
-  z-index: 2;
 }
 
 [type=radio]:checked ~ label ~ .content {
-  z-index: 1;
   display: block;
 }
