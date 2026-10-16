@@ -1,0 +1,179 @@
+/*
+ * Avery 5160 (also 5260, 5960, 8160, 18160): US Letter, 3 x 10 labels.
+ *   label         2.625in x 1in
+ *   top margin    0.5in      (bottom margin is also 0.5in)
+ *   side margin   0.1875in
+ *   column gap    0.125in    (no gap between rows)
+ *
+ * The sheet is laid out with absolute units and zero page margins so it
+ * prints identically regardless of browser defaults. Print at 100% /
+ * "Actual size". Per-printer nudges come in through --offset-x/y.
+ */
+:root {
+  --label-w: 2.625in;
+  --label-h: 1in;
+  --margin-top: 0.5in;
+  --margin-side: 0.1875in;
+  --col-gap: 0.125in;
+  --offset-x: 0in;
+  --offset-y: 0in;
+
+  /* line boxes are fixed so text never changes the label's layout */
+  --pad-y: 0.05in;
+  --pad-x: 0.07in;
+  --top-size: 9pt;
+  --top-lh: 10.5pt;
+  --desc-size: 8pt;
+  --desc-lh: 9.5pt;
+}
+
+@page {
+  size: letter portrait;
+  margin: 0;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #e8e8e8;
+  font-family: Tahoma, Verdana, "DejaVu Sans", sans-serif;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* screen-only controls */
+.controls {
+  max-width: 8.5in;
+  margin: 0 auto;
+  padding: 16px;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+.controls fieldset {
+  margin: 8px 0;
+}
+.controls input[type=number] {
+  width: 5em;
+}
+.controls ul {
+  margin: 4px 0;
+  padding-left: 1.25em;
+}
+#status:empty {
+  display: none;
+}
+
+/* one physical sheet */
+.sheet {
+  box-sizing: border-box;
+  width: 8.5in;
+  height: 11in;
+  margin: 0 auto 16px;
+  padding-top: calc(var(--margin-top) + var(--offset-y));
+  padding-left: calc(var(--margin-side) + var(--offset-x));
+  display: grid;
+  grid-template-columns: repeat(3, var(--label-w));
+  grid-template-rows: repeat(10, var(--label-h));
+  column-gap: var(--col-gap);
+  row-gap: 0;
+  align-content: start;
+  justify-content: start;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.label {
+  box-sizing: border-box;
+  width: var(--label-w);
+  height: var(--label-h);
+  padding: var(--pad-y) var(--pad-x);
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 38% 1fr;
+  grid-template-rows: calc(3 * var(--top-lh)) 1fr;
+  row-gap: 0.03in;
+  /* screen guide; printed only when .print-outlines is on */
+  outline: 1px dashed #bbb;
+  outline-offset: -1px;
+}
+
+.line {
+  height: var(--top-lh);
+  line-height: var(--top-lh);
+  font-size: var(--top-size);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.genres {
+  font-weight: bold;
+  min-width: 0;
+}
+
+.release {
+  min-width: 0;
+  padding-left: 0.05in;
+  border-left: 1.5pt solid #d9d9d9;
+}
+.release .album {
+  font-style: italic;
+}
+
+.bottom {
+  grid-column: 1 / -1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 0.05in;
+  align-items: end;
+}
+
+.description {
+  margin: 0;
+  font-size: var(--desc-size);
+  line-height: var(--desc-lh);
+  max-height: calc(3 * var(--desc-lh));
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  align-self: start;
+}
+
+.logo {
+  display: block;
+  height: 0.14in;
+  opacity: 0.5;
+}
+
+@media print {
+  html, body {
+    background: none;
+  }
+  .controls {
+    display: none;
+  }
+  .sheet {
+    margin: 0;
+    box-shadow: none;
+    /* stop short of the page bottom so a sheet can never spill a blank page */
+    height: auto;
+    break-after: page;
+    page-break-after: always;
+  }
+  .sheet:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+  .label {
+    outline: none;
+    break-inside: avoid;
+  }
+  .print-outlines .label {
+    outline: 0.5pt solid black;
+    outline-offset: -0.25pt;
+  }
+}

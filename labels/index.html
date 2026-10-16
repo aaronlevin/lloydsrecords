@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Avery 5160 Labels</title>
+    <link rel="stylesheet" href="/labels.css">
+    <script type="text/javascript" src="/util.js"></script>
+    <script>
+      const utils = importUtils();
+      const spreadsheetId = "1ue6b2SIU-kh-WEHSNBwyWFjhHMFNGiB248ajE4blP9s";
+      const LABELS_PER_SHEET = 30;
+      // smallest font size, in pt, that a long line is shrunk to before it is cut off with "..."
+      const MIN_FONT_PT = 6.5;
+      const MAX_OFFSET_IN = { x: 0.18, y: 0.25 };
+
+      // the Sheets API drops trailing empty cells, so pad every row to 7 columns
+      const mkLabel = (row) => {
+        const [artist, album, label, genre1, genre2, genre3, description] =
+          Array.from({ length: 7 }, (_, i) => String(row[i] ?? "").trim());
+        return {
+          "genres": [genre1, genre2, genre3],
+          "artist": artist,
+          "album": album,
+          "label": label,
+          "description": description
+        };
+      };
+
+      const el = (tag, className, text) => {
+        const node = document.createElement(tag);
+        node.className = className;
+        if(text !== undefined) {
+          node.textContent = text;
+        }
+        return node;
+      };
+
+      const render = (label) => {
+        const node = el("div", "label");
+
+        const genreNode = el("div", "genres");
+        label.genres.forEach((genre) => genreNode.appendChild(el("div", "line", genre)));
+
+        const releaseNode = el("div", "release");
+        releaseNode.appendChild(el("div", "line", label.artist));
+        releaseNode.appendChild(el("div", "line album", label.album));
+        releaseNode.appendChild(el("div", "line", label.label ? `(${label.label})` : ""));
+
+        const bottomNode = el("div", "bottom");
+        bottomNode.appendChild(el("p", "description", label.description));
+        const logo = el("img", "logo");
+        logo.src = "/g8.svg";
+        logo.alt = "";
+        bottomNode.appendChild(logo);
+
+        node.appendChild(genreNode);
+        node.appendChild(releaseNode);
+        node.appendChild(bottomNode);
+        return node;
+      };
+
+      // one .sheet per 30 labels; the grid fills left to right, top to bottom
+      const renderSheets = (labelsDiv, labels) => {
+        labelsDiv.replaceChildren();
+        for(let i = 0; i < labels.length; i += LABELS_PER_SHEET) {
+          const sheet = el("div", "sheet");
+          labels.slice(i, i + LABELS_PER_SHEET).forEach((label) => sheet.appendChild(render(label)));
+          labelsDiv.appendChild(sheet);
+        }
+      };
+
+      // shrink single-line text that is too wide for its box, measured with
+      // whatever fonts this machine actually has
+      const fitLines = (labelsDiv) => {
+        labelsDiv.querySelectorAll(".line").forEach((line) => {
+          line.style.fontSize = "";
+          let size = parseFloat(getComputedStyle(line).fontSize) * 0.75; // px -> pt
+          while(line.scrollWidth > line.clientWidth && size > MIN_FONT_PT) {
+            size = Math.max(MIN_FONT_PT, size - 0.25);
+            line.style.fontSize = `${size}pt`;
+          }
+        });
+      };
+
+      const storage = {
+        get: (key) => { try { return window.localStorage.getItem(key); } catch(e) { return null; } },
+        set: (key, value) => { try { window.localStorage.setItem(key, value); } catch(e) {} }
+      };
+
+      // printer nudges, remembered per browser since every printer feeds a little differently
+      const setupOffsets = () => {
+        ["x", "y"].forEach((axis) => {
+          const input = document.getElementById(`offset-${axis}`);
+          const apply = () => {
+            const max = MAX_OFFSET_IN[axis];
+            const value = Math.min(max, Math.max(-max, parseFloat(input.value) || 0));
+            document.documentElement.style.setProperty(`--offset-${axis}`, `${value}in`);
+            storage.set(`labels-offset-${axis}`, String(value));
+          };
+          input.min = -MAX_OFFSET_IN[axis];
+          input.max = MAX_OFFSET_IN[axis];
+          input.value = storage.get(`labels-offset-${axis}`) ?? "0";
+          input.addEventListener("input", apply);
+          apply();
+        });
+
+        const outlines = document.getElementById("outlines");
+        const applyOutlines = () => document.body.classList.toggle("print-outlines", outlines.checked);
+        outlines.addEventListener("change", applyOutlines);
+        applyOutlines();
+
+        document.getElementById("print").addEventListener("click", () => window.print());
+      };
+
+      const showStatus = (message) => {
+        document.getElementById("status").textContent = message;
+      };
+
+      window.addEventListener("load", (event) => {
+        const labelsDiv = document.getElementById("labels");
+        setupOffsets();
+
+        const accessToken = utils.getAccessToken();
+        if(accessToken === null || accessToken === undefined) {
+          utils.createOAuthButton(utils.clientId, "initiate-oauth", "labels");
+          return;
+        }
+
+        showStatus("Loading labels…");
+        utils.handleSpreadsheet(spreadsheetId, "labels", utils.clientId, accessToken)
+          .then((json) => {
+            const rows = (json.valueRanges[0].values || []).slice(1)
+              .filter((row) => row.some((cell) => String(cell ?? "").trim() !== ""));
+            renderSheets(labelsDiv, rows.map(mkLabel));
+            return document.fonts.ready.then(() => fitLines(labelsDiv)).then(() => {
+              const sheets = Math.ceil(rows.length / LABELS_PER_SHEET);
+              showStatus(`${rows.length} labels on ${sheets} sheet${sheets === 1 ? "" : "s"}.`);
+            });
+          })
+          .catch((error) => {
+            console.error(error);
+            showStatus(`Couldn't load labels: ${error.message}. Your sign-in may have expired; sign in again.`);
+            utils.createOAuthButton(utils.clientId, "initiate-oauth", "labels");
+          });
+      });
+    </script>
+  </head>
+
+  <body>
+    <div class="controls">
+      <div id="initiate-oauth"></div>
+      <p id="status"></p>
+      <button type="button" id="print">Print</button>
+      <fieldset>
+        <legend>Printer adjustment</legend>
+        Move everything right <input type="number" id="offset-x" step="0.01" value="0"> in,
+        down <input type="number" id="offset-y" step="0.01" value="0"> in
+        (negative moves left / up; remembered on this computer)
+        <br>
+        <label><input type="checkbox" id="outlines"> Print label outlines (for a test print on plain paper)</label>
+      </fieldset>
+      <details>
+        <summary>Print settings for Avery 5160</summary>
+        <ul>
+          <li>Paper size: <b>Letter</b>. Scale: <b>100%</b> / <b>Actual size</b> (not "Fit to page").</li>
+          <li>Margins: <b>Default</b> or <b>None</b>. Headers and footers: <b>off</b>.</li>
+          <li>Chrome or Firefox recommended; older Safari ignores the page's margin settings.</li>
+          <li>Test first: tick "Print label outlines", print on plain paper, and hold it against a label
+            sheet up to a light. If every box is shifted the same way, nudge with the adjustment above.</li>
+        </ul>
+      </details>
+    </div>
+    <div id="labels"></div>
+  </body>
+</html>
