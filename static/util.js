@@ -18,11 +18,15 @@ function importUtils() {
       return 25569 + (date.getTime()-date.getTimezoneOffset()*60000)/86400000 ;
     },
 
-    // ranges=Transactions, Sheet1
+    // ranges: a sheet name or A1 range ("sales", "sales!Q:Q"), or an array of them;
+    // the response has one valueRanges entry per range, in order
     "handleSpreadsheet": function(spreadsheetId, ranges, clientId, accessToken) {
+      const rangeParams = [].concat(ranges)
+        .map((range) => 'ranges=' + encodeURIComponent(range))
+        .join('&');
       const requestUri =
         `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?` +
-        'ranges=' + ranges +
+        rangeParams +
         '&valueRenderOption=UNFORMATTED_VALUE';
 
       const request = new Request(requestUri, {

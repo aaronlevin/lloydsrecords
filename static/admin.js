@@ -44,6 +44,20 @@ function formatDateValue(value) {
   return Number.isNaN(date.getTime()) ? String(value) : date.toISOString().split('T')[0];
 }
 
+/**
+ * Stitch single-column ranges (e.g. "sales!A:A", "sales!Q:Q") from one
+ * batchGet back into rows, one cell per range in request order. The API
+ * omits trailing empty rows and cells, so missing cells become undefined.
+ */
+function zipColumns(valueRanges) {
+  const columns = valueRanges.map((range) => range.values || []);
+  const rowCount = Math.max(0, ...columns.map((column) => column.length));
+  return Array.from({ length: rowCount }, (_, i) => columns.map((column) => (column[i] || [])[0]));
+}
+
+// sales tab columns, in CardSale constructor order
+const SALES_COLUMNS = ["A", "B", "F", "J", "K", "L", "Q"];
+
 function groupByConsignor(items) {
   return items.reduce((map, obj) => {
     if(map.has(obj.consignor)) {
@@ -370,11 +384,11 @@ document.addEventListener('DOMContentLoaded', function() {
       });
 
   const salesPromise =
-    utils.handleSpreadsheet(spreadsheetId, "sales", utils.clientId, accessToken)
+    // the Square export is ~33 columns wide; only fetch the ones CardSale reads:
+    // Date, Time, Qty, Gross Sales, Discounts, Net Sales, Notes
+    utils.handleSpreadsheet(spreadsheetId, SALES_COLUMNS.map((col) => `sales!${col}:${col}`), utils.clientId, accessToken)
       .then((json) => {
-        const sales = json.valueRanges[0].values.slice(1).map((e) => {
-          return new CardSale(e[0], e[1], e[5], e[9], e[10], e[11], e[16]);
-        });
+        const sales = zipColumns(json.valueRanges).slice(1).map((e) => new CardSale(...e));
         const salesMap = groupByConsignor(sales);
         for(const grouped of salesMap.values()) {
           grouped.sort((a,b) => a.sortKey - b.sortKey);

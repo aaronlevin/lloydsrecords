@@ -15,8 +15,8 @@ const ctx = {
   Intl, console, Number, Math, Date, Map, String, RegExp, JSON, parseFloat, Error, Promise,
 };
 vm.createContext(ctx);
-vm.runInContext(src + '\n;__exports = { parseMoney, normalizeId, timeToFraction, ConsignorRate, CardSale, CashSale, Payout, groupByConsignor };', ctx);
-const { parseMoney, normalizeId, timeToFraction, ConsignorRate, CardSale, CashSale, Payout, groupByConsignor } = ctx.__exports;
+vm.runInContext(src + '\n;__exports = { parseMoney, normalizeId, timeToFraction, ConsignorRate, CardSale, CashSale, Payout, groupByConsignor, zipColumns, SALES_COLUMNS };', ctx);
+const { parseMoney, normalizeId, timeToFraction, ConsignorRate, CardSale, CashSale, Payout, groupByConsignor, zipColumns, SALES_COLUMNS } = ctx.__exports;
 
 let failures = 0;
 function eq(label, actual, expected) {
@@ -101,6 +101,29 @@ eq('payout missing note ok', payout.note, undefined);
 // grouping
 const map = groupByConsignor([cash, cashNum, new CashSale(45678, 10, "001", "x", null)]);
 eq('group sizes', map.get("001").length, 2);
+
+// zipColumns: single-column ranges -> rows, tolerating the API's omitted trailing cells/rows
+const zipped = zipColumns([{ values: [["a1"], ["a2"], ["a3"]] }, { values: [["b1"], [], ["b3"]] }, { values: [["c1"]] }, {}]);
+eq('zip row count = longest column', zipped.length, 3);
+eq('zip row 0', JSON.stringify(zipped[0]), JSON.stringify(["a1", "b1", "c1", undefined]));
+eq('zip empty middle cell', zipped[1][1], undefined);
+eq('zip short column', zipped[2][2], undefined);
+eq('zip no ranges', zipColumns([]).length, 0);
+
+// fetching only SALES_COLUMNS builds the same CardSales as indexing full 33-column Square rows
+const colIndex = (col) => col.charCodeAt(0) - 65;
+const fullRows = [
+  ["Date", "Time", "Time Zone", "Category", "Item", "Qty", "PPN", "SKU", "Mods", "Gross Sales", "Discounts", "Net Sales", "Tax", "Txn", "Pay", "Device", "Notes"],
+  [45677, "16:24:47", "Pacific", "None", "used", 1, "Regular", "", "", "$23.00", "-$2.30", "$20.70", "$2.12", "t", "p", "", "666 miles", "https://x", "Payment"],
+  [45678, 0.9, "Pacific", "None", "1 used", 2, "Regular", "", "", 100, 0, 100, 10.25, "t", "p", "dev"],
+  [45679, "10:00:00", "Pacific", "None", "used", 1, "", "", "", "$5.00", "$0.00", "$5.00"],
+];
+const oldSales = fullRows.slice(1).map((e) => new CardSale(e[0], e[1], e[5], e[9], e[10], e[11], e[16]));
+const columnRanges = SALES_COLUMNS.map((col) => ({ values: fullRows.map((row) => row.length > colIndex(col) ? [row[colIndex(col)]] : []) }));
+const newSales = zipColumns(columnRanges).slice(1).map((e) => new CardSale(...e));
+const saleFields = (s) => JSON.stringify([s.date, s.time, s.sortKey, s.quantity, s.gross, s.discount, s.net, s.owed, s.consignor, s.note]);
+eq('column fetch: same sale count', newSales.length, oldSales.length);
+oldSales.forEach((sale, i) => eq(`column fetch: sale ${i} identical`, saleFields(newSales[i]), saleFields(sale)));
 
 console.log(failures === 0 ? '\nALL TESTS PASSED' : `\n${failures} FAILURES`);
 process.exit(failures === 0 ? 0 : 1);
